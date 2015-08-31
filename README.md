@@ -6,9 +6,14 @@
 
 现已经实现的界面效果如下：
 
-开始界面 ![开始界面](http://7xlhko.com1.z0.glb.clouddn.com/welcomeScene.tiff)
+开始界面 
 
-游戏界面 ![游戏界面](http://7xlhko.com1.z0.glb.clouddn.com/gameScene.tiff)
+![开始界面](http://7xlhko.com1.z0.glb.clouddn.com/welcomeScene.tiff)
 
-结束界面 ![游戏结束](http://7xlhko.com1.z0.glb.clouddn.com/over.png)
+游戏界面 
 
+![游戏界面](http://7xlhko.com1.z0.glb.clouddn.com/gameScene.tiff)
+
+结束界面 
+
+![游戏结束](http://7xlhko.com1.z0.glb.clouddn.com/over.png)
