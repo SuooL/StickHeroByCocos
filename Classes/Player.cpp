@@ -10,16 +10,21 @@
 
 USING_NS_CC;
 
-bool Player::init() {
+
+bool Player::init(int typeID) {
     
-    _player = Sprite::create("res/image/anim1/stay1.png");
+    runSpeed = 400;
+    char pngName[260] = { 0 };
+    sprintf(pngName, "res/image/anim%d/stay1.png", typeID);
+    
+    _player = Sprite::create(pngName);
     _player->setAnchorPoint(Vec2(0.5, 0));
     
     Vector<SpriteFrame*> frameVector;
     for (int i = 1; i <= 5; i++) {
         
         char pngName[260] = { 0 };
-        sprintf(pngName, "res/image/anim1/stay%d.png", i);
+        sprintf(pngName, "res/image/anim%d/stay%d.png", typeID, i);
         frameVector.pushBack(SpriteFrame::create(pngName, Rect(0, 0, 54, 58)));
         
     }
@@ -33,14 +38,14 @@ bool Player::init() {
     //2
     frameVector.clear();
     for (int i = 1; i <= 5; i++) {
-        
         char pngName[260] = { 0 };
-        sprintf(pngName, "res/image/anim1/walk%d.png", i);
+        sprintf(pngName, "res/image/anim%d/walk%d.png",typeID, i);
         frameVector.pushBack(SpriteFrame::create(pngName, Rect(0, 0, 54, 58)));
     }
     auto WalkAnimation = Animation::createWithSpriteFrames(frameVector, 1);
     WalkAnimation->setRestoreOriginalFrame(false);
     WalkAnimation->setLoops(-1);
+   // WalkAnimation->setDelayPerUnit(1);
     WalkAnimate = Animate::create(WalkAnimation);
     
     
@@ -100,6 +105,11 @@ Animate* Player::getStayAnimate(){
     
     return StayAnimate;
 }
+
+int Player::getSpeed(){
+    return runSpeed;
+}
+
 Player::~Player(){
     StayAnimate->release();
     WalkAnimate->release();

@@ -10,6 +10,8 @@
 #define __StickHero__Player__
 
 #include "cocos2d.h"
+
+
 USING_NS_CC;
 
 class Player{
@@ -20,10 +22,13 @@ private:
     Animate* WalkAnimate;
     Animate* StayAnimate;
     
+    int runSpeed;
+    
 public:
+    // Player(int typeID);
     virtual ~Player();
     
-    bool init();
+    bool init(int typeID);
     Sprite* getPlayer();
     
     static Animate* animationWithFrameName(const char *frameName, int iloops, float delay);
@@ -35,6 +40,8 @@ public:
     void Start(Vec2);
     Animate* getWalkAnimate();
     Animate* getStayAnimate();
+    
+    int getSpeed();
     
 };
 

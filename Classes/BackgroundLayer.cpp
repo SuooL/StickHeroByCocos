@@ -37,34 +37,16 @@ bool BackgroundLayer::init() {
     
     MyWinSize = Director::getInstance()->getWinSize();
     /**
-     * 闅忔満璁剧疆澹佺焊
+     * 背景图片随机初始化
      */
     int randomNumber = CCRANDOM_0_1()*10;
     int bgNumber = randomNumber % 5;
-    switch (bgNumber) {
-        case 0:
-            Image_One = Sprite::create("res/image/bg/bg1.jpg");
-            Image_Two = Sprite::create("res/image/bg/bg1.jpg");
-            break;
-        case 1:
-            Image_One = Sprite::create("res/image/bg/bg2.jpg");
-            Image_Two = Sprite::create("res/image/bg/bg2.jpg");
-            break;
-        case 2:
-            Image_One = Sprite::create("res/image/bg/bg3.jpg");
-            Image_Two = Sprite::create("res/image/bg/bg3.jpg");
-            break;
-        case 3:
-            Image_One = Sprite::create("res/image/bg/bg4.jpg");
-            Image_Two = Sprite::create("res/image/bg/bg4.jpg");
-            break;
-        case 4:
-            Image_One = Sprite::create("res/image/bg/bg5.jpg");
-            Image_Two = Sprite::create("res/image/bg/bg5.jpg");
-            break;
-        default:
-            break;
-    }
+
+    char bgPngName[260] = { 0 };
+    sprintf(bgPngName, "res/image/bg/bg%d.jpg", bgNumber + 1);
+    
+    Image_One = Sprite::create(bgPngName);
+    Image_Two = Sprite::create(bgPngName);
     
     Image_One->setPosition(MyWinSize.width / 2, MyWinSize.height / 2);
     Image_Two->setPosition(
@@ -92,7 +74,18 @@ bool BackgroundLayer::init() {
                                          NULL);
     auto startMoveRepeat = RepeatForever::create(startMoveSeq);
     startBtn->runAction(startMoveRepeat);
-    menu = Menu::create(startBtn, NULL);
+    
+    
+    auto changePlayerBtn = MenuItemSprite::create(
+                                           Sprite::create("res/image/mainqiehuan.png"),
+                                           Sprite::create("res/image/mainqiehuan.png"), NULL,
+                                           CC_CALLBACK_1(BackgroundLayer::ChangePlayer,this));
+    changePlayerBtn->setName("changePlayerBtn");
+    changePlayerBtn->setPosition(MyWinSize.width / 5*4, MyWinSize.height/3);
+
+    
+    
+    menu = Menu::create(startBtn, changePlayerBtn, NULL);
     menu->setPosition(0, 0);
     
     this->addChild(menu, 2);
@@ -134,8 +127,9 @@ bool BackgroundLayer::init() {
     /**
      * 添加palyer并初始化
      */
+    countID = (bgNumber == 0 ? bgNumber +1 : bgNumber);
     player = new Player();
-    player->init();
+    player->init(countID);
     player->getPlayer()->setPosition(Vec2(MyWinSize.width/2,stageSprite[0]->getContentSize().height/4*3));
     this->addChild(player->getPlayer(),10);
     player->Stay();
@@ -155,6 +149,7 @@ bool BackgroundLayer::init() {
 void BackgroundLayer::Start(Ref* pSender) {
     
     log("%s","BackgroundLayer::Start()");
+    isStickLength = true;
     isStart=true;//代表游戏开始
     
     this->removeChild(menu);
@@ -162,9 +157,6 @@ void BackgroundLayer::Start(Ref* pSender) {
     
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
     scoreTitle = Label::createWithBMFont("fonts/bitmapFontChinese.fnt","0");
-    // scoreTitle->setSystemFontSize(30);
-    // scoreTitle = Label::createWithTTF(toStr, "fonts/arial.ttf", 50);
-    // scoreTitle = Label::createWithTTF(toStr, "fonts/Marker Felt.ttf", 50);
     scoreTitle->setPosition(Vec2(MyWinSize.width/2,MyWinSize.height/4*3));
     this->addChild(scoreTitle, 1);
     
@@ -177,7 +169,11 @@ void BackgroundLayer::Start(Ref* pSender) {
     StickPoint=Vec2(100+stageSprite[0]->getScaleX()* stageSprite[0]->getContentSize().width/2, stageSprite[0]->getContentSize().height);
     
     addStage();
-    //
+}
+
+void BackgroundLayer::ChangePlayer(cocos2d::Ref *pSender){
+    player->getPlayer()->setTexture("");
+    
 }
 
 void BackgroundLayer::addStage() {
@@ -217,30 +213,31 @@ void BackgroundLayer::stageMove() {
     NowStage = stageNumber == 0 ? 2 : stageNumber - 1;
     LastStage = NowStage == 0 ? 2 : (NowStage - 1);
     NextStage = NowStage == 2 ? 0 : (NowStage + 1);
-    MoveTo* nowStageMove = MoveTo::create(0.2,Vec2(100, stageSprite[0]->getContentSize().height / 2));
+    MoveTo* nowStageMove = MoveTo::create(0.3,Vec2(100, stageSprite[0]->getContentSize().height / 2));
     stageSprite[NowStage]->runAction(nowStageMove);
-    MoveTo* lastStageMove = MoveTo::create(0.2,
+    MoveTo* lastStageMove = MoveTo::create(0.3,
                                            Vec2(-stageSprite[LastStage]->getContentSize().width * stageSprite[LastStage]->getScaleX(),
                                                 stageSprite[0]->getContentSize().height / 2));
     stageSprite[LastStage]->runAction(lastStageMove);
     
-    
-    StickPoint = Vec2(100+stageSprite[NowStage]->getScaleX()*stageSprite[NowStage]->getContentSize().width/2,
-                      stageSprite[0]->getContentSize().height);
-    initStick();
-    
     /*
      *同步player和stick的位置
      */
-    player->getPlayer()->runAction(MoveTo::create(0.2,Vec2(100, stageSprite[0]->getContentSize().height )));
+    player->getPlayer()->runAction(MoveTo::create(0.3,Vec2(100, stageSprite[0]->getContentSize().height )));
+    
+    StickPoint = Vec2(100+stageSprite[NowStage]->getScaleX()*stageSprite[NowStage]->getContentSize().width/2, stageSprite[0]->getContentSize().height);
+    
+    initStick();
+
     addStage();
+    
     successFlag = false;//设置successFlag
 }
 
 bool BackgroundLayer::onTouchBegan(Touch* pTouch, Event* pEvent)
 {
     log("%s","BackgroundLayer::onTouchBegan()");
-    if(isStart){
+    if(isStart && isStickLength){
         addStick();
     }
     return true;
@@ -259,6 +256,7 @@ void BackgroundLayer::onTouchEnded(Touch* pTouch, Event* pEvent)
 
 void BackgroundLayer::addStick()
 {
+    
     log("%s","BackgroundLayer::addStick()");
     stick->setScaleY(1);//初始化stck长度
     stick->setRotation(0);
@@ -275,11 +273,12 @@ void BackgroundLayer::StopStick()
 {
     log("%s","BackgroundLayer::StopStick()");
     TouchLength = stick->getContentSize().height*stick->getScaleY();
+    isStickLength = false;
     this->unschedule(schedule_selector(BackgroundLayer::StickLength));
 }
 
 void BackgroundLayer::RotateStickAndGo(){
-    //	DestLengthMin = abs(stageSprite[LastStage]->getPositionX() - stageSprite[NowStage]->getPositionX()) - stageSprite[LastStage]->getContentSize().width*stageSprite[LastStage]->getScaleX()/2 - stageSprite[NowStage]->getContentSize().width*stageSprite[NowStage]->getScaleX()/2;
+
     DestLengthMin = std::abs(stageSprite[NextStage]->getPositionX() - stageSprite[NowStage]->getPositionX()) - stageSprite[NextStage]->getContentSize().width*stageSprite[NextStage]->getScaleX()/2 - stageSprite[NowStage]->getContentSize().width*stageSprite[NowStage]->getScaleX()/2;
     
     DestLengthMax = DestLengthMin + stageSprite[NextStage]->getContentSize().width*stageSprite[NextStage]->getScaleX();
@@ -291,6 +290,7 @@ void BackgroundLayer::RotateStickAndGo(){
     if(TouchLength<DestLengthMin || TouchLength > DestLengthMax)
     {
         successFlag=false;
+        isStart=false;
     }
     else if(TouchLength >= DestLengthMin && TouchLength <=DestLengthMax)
     {
@@ -318,34 +318,38 @@ void BackgroundLayer::RotateStickAndGo(){
 
 void BackgroundLayer::stickCallBack(bool successFlag){
     
-    
     kickId = SimpleAudioEngine::getInstance()->playEffect("res/sound/kick.ogg",true);
     
     if(successFlag==true){
+        float timeToDes = (stageSprite[NextStage]->getPositionX() -player->getPlayer()->getPositionX())/ player->getSpeed();
         
-        auto playMove = MoveTo::create(0.2,Vec2( stageSprite[NextStage]->getPositionX(),stageSprite[NextStage]->getContentSize().height));
+        auto playMove = MoveTo::create(timeToDes,Vec2( stageSprite[NextStage]->getPositionX(),stageSprite[NextStage]->getContentSize().height));
         player->Stop();
         player->Walk();
-        auto playSeq  =Sequence::create(playMove,
-                                        CallFuncN::create(CC_CALLBACK_0(BackgroundLayer::stageMove,this)),NULL);
-        player->getPlayer()->runAction(playSeq);
+        auto playSeq  =Sequence::create(playMove,CallFuncN::create(CC_CALLBACK_0(BackgroundLayer::stageMove,this)),NULL);
         /*
-         *停止背景移动
+         * 背景移动
          */
         this->schedule(schedule_selector(BackgroundLayer::bgMove));
+        
+        player->getPlayer()->runAction(playSeq);
+        // player->Stop();
+        // player->Walk();
         
         /*
          * 移动之后，修改分数
          */
         scoreTitle->setString(StringUtils::toString(scoreCount));
     }else{
-        auto playPoint = Vec2(
-                              stageSprite[NowStage]->getPositionX()
-                              + stageSprite[NowStage]->getContentSize().width*stageSprite[NowStage]->getScaleX()/2
-                              + TouchLength
-                              + player->getPlayer()->getContentSize().width/3,
-                              stageSprite[NextStage]->getContentSize().height
-                              );
+        
+        // 判断 Stick 的长度，大于屏幕的宽度的只要 player 走出屏幕就让 player 执行 moveDown
+        
+        float destinationX =stageSprite[NowStage]->getPositionX() + stageSprite[NowStage]->getContentSize().width*stageSprite[NowStage]->getScaleX()/2+ TouchLength+ player->getPlayer()->getContentSize().width/3 > MyWinSize.width ? MyWinSize.width + 50 : stageSprite[NowStage]->getPositionX() + stageSprite[NowStage]->getContentSize().width*stageSprite[NowStage]->getScaleX()/2+ TouchLength+ player->getPlayer()->getContentSize().width/3;
+        
+        float timeToDes = (destinationX - player->getPlayer()->getContentSize().width/3) / player->getSpeed();
+        
+        auto playPoint = Vec2(destinationX,stageSprite[NextStage]->getContentSize().height);
+        
         //player掉落后的位置
         auto playerDownPoint = Vec2(
                                     stageSprite[NowStage]->getPositionX()
@@ -353,20 +357,40 @@ void BackgroundLayer::stickCallBack(bool successFlag){
                                     + TouchLength
                                     + player->getPlayer()->getContentSize().width/3,
                                     -70);
-        auto playerMove = MoveTo::create(0.2,playPoint);
+        auto playerMove = MoveTo::create(timeToDes,playPoint);
         auto playerDown = MoveTo::create(0.3,playerDownPoint);
-        auto playerSeq = Sequence::create(playerMove,
-                                          playerDown,
-                                          NULL);
+        
+        auto callbackFunc = [&](){
+            //beforeOverAni(playerDownPoint);
+            RotateTo* RoDown_Stick = RotateTo::create(0.5,180);
+            stick->runAction(RoDown_Stick);
+            /**
+             * 停止背景移动
+             */
+            this->unschedule(schedule_selector(BackgroundLayer::bgMove));
+        };
+        
+        CallFunc* callFunc = CallFunc::create(callbackFunc);
+        
+        auto playerSeq = Sequence::create(playerMove, callFunc, playerDown, CallFuncN::create(CC_CALLBACK_0(BackgroundLayer::gameOver,this)), NULL);
+        
+        /*
+         * 背景移动
+         */
+        this->schedule(schedule_selector(BackgroundLayer::bgMove));
+        
         player->getPlayer()->runAction(playerSeq);
-        
-        RotateTo* RoDown_Stick = RotateTo::create(0.7,180);
-        stick->runAction(RoDown_Stick);
-        
-        gameOver();
         
     }
 }
+
+void BackgroundLayer::beforeOverAni(Vec2 point){
+    auto playerDown = MoveTo::create(0.5,point);
+    player->getPlayer()->runAction(playerDown);
+    RotateTo* RoDown_Stick = RotateTo::create(0.7,180);
+    stick->runAction(RoDown_Stick);
+}
+
 
 void BackgroundLayer::initStick(){
     
@@ -417,10 +441,10 @@ void BackgroundLayer::gameOver(){
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener,gameOverLayer);
 
     this->addChild(gameOverLayer,8);
-    
 }
 BackgroundLayer::BackgroundLayer(){
     isStart = false;
+    isStickLength = false;
     stageNumber=1;//设置第一个stage为1
     NowStage=0;//player所在stage
     LastStage=2;//player上一个stage
@@ -428,7 +452,7 @@ BackgroundLayer::BackgroundLayer(){
     scoreCount=0;
     successFlag=false;//true 移动成功的标志
     moveComplete=false;//true 移动完成的标志
-    
+    countID = 1;
 }
 BackgroundLayer::~BackgroundLayer(){
     delete player;
